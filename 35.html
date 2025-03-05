@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>آپلود فایل</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .upload-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .upload-button:hover {
+            background-color: #45a049;
+        }
+
+        .upload-container {
+            margin-top: 30px;
+        }
+
+        .upload-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 20px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            margin: 0 20px;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            border-radius: 10px;
+            transition: width 3s ease-in-out;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            margin-left: 15px;
+        }
+
+        .file-preview {
+            max-width: 50px;
+            max-height: 50px;
+            margin-left: 15px;
+        }
+
+        .file-link {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+
+        .file-link:hover {
+            text-decoration: underline;
+        }
+
+        .share-link {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .share-link a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .share-link a:hover {
+            text-decoration: underline;
+        }
+
+        .copy-button {
+            background-color: #008CBA;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .copy-button:hover {
+            background-color: #007B9E;
+        }
+
+        .copy-success {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-right: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>آپلود فایل</h1>
+
+    <!-- دکمه آپلود -->
+    <button class="upload-button" onclick="document.getElementById('fileInput').click()">
+        انتخاب فایل برای آپلود
+    </button>
+    <input type="file" id="fileInput" multiple hidden>
+
+    <!-- بخش نمایش فایل‌های آپلود شده -->
+    <div class="upload-container" id="uploadContainer"></div>
+
+    <!-- بخش لینک اشتراک‌گذاری -->
+    <div class="share-link" id="shareLinkContainer" style="display: none;">
+        <p>لینک اشتراک‌گذاری فایل:</p>
+        <a id="shareLink" target="_blank"></a>
+        <button class="copy-button" id="copyLinkButton">کپی لینک</button>
+        <span class="copy-success" id="copySuccess">لینک کپی شد!</span>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const shareLinkContainer = document.getElementById('shareLinkContainer');
+        const shareLink = document.getElementById('shareLink');
+        const copyLinkButton = document.getElementById('copyLinkButton');
+        const copySuccess = document.getElementById('copySuccess');
+
+        // وقتی کاربر فایل‌ها را انتخاب می‌کند
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            handleFiles(files);
+        });
+
+        // مدیریت فایل‌ها
+        function handleFiles(files) {
+            for (const file of files) {
+                createUploadItem(file);
+                simulateUpload(file);
+            }
+        }
+
+        // ایجاد آیتم برای نمایش فایل
+        function createUploadItem(file) {
+            const uploadItem = document.createElement('div');
+            uploadItem.className = 'upload-item';
+
+            // پیش‌نمایش فایل
+            const preview = document.createElement('div');
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.className = 'file-preview';
+                img.src = URL.createObjectURL(file);
+                preview.appendChild(img);
+            } else {
+                const icon = document.createElement('i');
+                icon.className = `file-icon ${getFileIcon(file.type)}`;
+                preview.appendChild(icon);
+            }
+
+            // اطلاعات فایل
+            const fileInfo = document.createElement('div');
+            fileInfo.innerHTML = `
+                <div>نام فایل: ${file.name}</div>
+                <div>حجم: ${formatFileSize(file.size)}</div>
+            `;
+
+            // نوار پیشرفت
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            const progress = document.createElement('div');
+            progress.className = 'progress';
+            progressBar.appendChild(progress);
+
+            uploadItem.appendChild(preview);
+            uploadItem.appendChild(fileInfo);
+            uploadItem.appendChild(progressBar);
+            uploadContainer.appendChild(uploadItem);
+        }
+
+        // شبیه‌سازی آپلود و ایجاد لینک
+        function simulateUpload(file) {
+            const progress = document.querySelector('.progress:last-child');
+            progress.style.width = '100%';
+
+            setTimeout(() => {
+                // ایجاد لینک دانلود
+                const fileLink = document.createElement('a');
+                fileLink.href = URL.createObjectURL(file);
+                fileLink.download = file.name;
+                fileLink.className = 'file-link';
+                fileLink.textContent = 'دانلود فایل';
+
+                // جایگزینی نوار پیشرفت با لینک
+                progress.parentElement.replaceWith(fileLink);
+
+                // نمایش لینک اشتراک‌گذاری
+                shareLink.href = fileLink.href;
+                shareLink.textContent = fileLink.href;
+                shareLinkContainer.style.display = 'block';
+            }, 3000);
+        }
+
+        // کپی لینک به کلیپ‌بورد
+        copyLinkButton.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(shareLink.href);
+                copySuccess.style.display = 'inline';
+                setTimeout(() => {
+                    copySuccess.style.display = 'none';
+                }, 2000);
+            } catch (err) {
+                console.error('خطا در کپی لینک:', err);
+            }
+        });
+
+        // آیکون مناسب برای نوع فایل
+        function getFileIcon(type) {
+            const icons = {
+                'application/pdf': 'fas fa-file-pdf',
+                'text/plain': 'fas fa-file-alt',
+                'application/msword': 'fas fa-file-word',
+                'application/vnd.ms-excel': 'fas fa-file-excel',
+                'application/zip': 'fas fa-file-archive'
+            };
+            return icons[type] || 'fas fa-file';
+        }
+
+        // فرمت‌دهی حجم فایل
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 بایت';
+            const k = 1024;
+            const sizes = ['بایت', 'کیلوبایت', 'مگابایت'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</body>
+</html>
